@@ -50,46 +50,11 @@ class PatentRetrievalService:
         dimension = self.embeddings.shape[1]
         self.index = faiss.IndexFlatIP(dimension)
         self.index.add(self.embeddings)
-    
-    def _calculate_relevance_scores(
-        self,
-        keyword_embedding: np.ndarray,
-        precision_recall_balance: float
-    ) -> Tuple[np.ndarray, np.ndarray]:
-        """
-        Calculate relevance scores with precision-recall adjustment
-        
-        Args:
-            keyword_embedding: Encoded keywords
-            precision_recall_balance: Value between 0 and 1, higher means more precision
-        
-        Returns:
-            Tuple of (scores, indices)
-        """
-        # Get raw similarity scores
-        distances, indices = self.index.search(
-            keyword_embedding,
-            k=len(self.abstracts)
-        )
-        
-        # Calculate adjusted scores based on precision-recall balance
-        avg_similarities = np.mean(distances, axis=0)
-        
-        # Apply exponential scaling based on precision-recall balance
-        # Higher balance -> steeper curve favoring high similarity matches
-        power = 1 + (precision_recall_balance)  # Ranges from 1 to 2
-        adjusted_scores = np.power(avg_similarities, power)
-        
-        # Normalize scores
-        adjusted_scores = (adjusted_scores - adjusted_scores.min()) / (adjusted_scores.max() - adjusted_scores.min())
-        
-        return adjusted_scores, indices
-    
+
     def retrieve_patents(
         self,
         keywords: List[str],
-        precision_recall_balance: float = 0.5,
-        min_score_threshold: float = 0.1
+        precision_recall_balance: float = 0.5
     ) -> Dict[str, Any]:
         """
         Retrieve patent abstracts related to given keywords with precision-recall tradeoff
@@ -112,42 +77,33 @@ class PatentRetrievalService:
         keyword_embedding = self.embedding_model.encode([' '.join(keywords)])
         faiss.normalize_L2(keyword_embedding)
         
-        # Calculate relevance scores with precision-recall adjustment
-        adjusted_scores, indices = self._calculate_relevance_scores(
+        # Get raw similarity scores
+        distances, indices = self.index.search(
             keyword_embedding,
-            precision_recall_balance
+            k=len(self.abstracts)
         )
-        
-        # Filter results based on adjusted threshold
-        dynamic_threshold = min_score_threshold * (1 + precision_recall_balance)
-        relevant_mask = adjusted_scores >= dynamic_threshold
-        
-        relevant_indices = indices[0][relevant_mask]
-        relevant_scores = adjusted_scores[relevant_mask]
-        
-        # Sort by relevance
-        sorted_idx = np.argsort(relevant_scores)[::-1]
-        ranked_results = [
-            (relevant_indices[i], relevant_scores[i])
-            for i in sorted_idx
-        ]
-        
+
+        # Apply precision-recall balance
+        threshold = np.percentile(
+            distances,
+            (1 - precision_recall_balance) * 100
+        )
+        # Get indices of abstracts with scores above threshold
+        relevant_indices = indices[distances >= threshold]
+
+        # Store them in a dictionary
+        results = {'abstract' : [],
+        'relevance_score': [],
+        }
+        for i, idx in enumerate(relevant_indices):
+            results['abstract'].append(self.abstracts[idx])
+            results['relevance_score'].append(distances[0][i])
+
         # Prepare results with explanations
         results = {
-            "retrieved_patents": [
-                {
-                    "abstract": self.abstracts[idx],
-                    "relevance_score": float(score),
-                    "explanation": self._generate_explanation(
-                        idx,
-                        keywords,
-                        precision_recall_balance
-                    )
-                } for idx, score in ranked_results
-            ],
             "metadata": {
                 "keywords": keywords,
-                "total_matches": len(ranked_results),
+                "total_matches": len(relevant_indices),
                 "precision_recall_balance": precision_recall_balance,
                 "embedding_model": self.model_name
             }
