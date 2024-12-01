@@ -1,4 +1,4 @@
-from engine import PatentRetrievalService, load_config
+from src.engine import PatentRetrievalService, load_config
 import json
 
 def main():

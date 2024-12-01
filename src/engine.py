@@ -60,7 +60,7 @@ class PatentRetrievalService:
         self, 
         keywords: List[str], 
         precision_recall_balance: float = 0.5,
-        top_k: int = 10
+        # top_k: int = 10
     ) -> Dict[str, Any]:
         """
         Retrieve patent abstracts related to given keywords
@@ -73,15 +73,12 @@ class PatentRetrievalService:
         Returns:
             Dict containing retrieved patents and relevance scores
         """
-        # Detect languages of keywords
-        keyword_languages = [detect(kw) for kw in keywords]
-        
         # Generate embedding for keywords
         keyword_embedding = self.embedding_model.encode(keywords)
         faiss.normalize_L2(keyword_embedding)
         
         # Perform similarity search
-        distances, indices = self.index.search(keyword_embedding, k=len(self.abstracts))
+        distances, indices = self.index.search(keyword_embedding, k=len(self.abstracts)) # Use self.k or top_k maybe?
         
         # Aggregate similarities across keywords
         avg_similarities = np.mean(distances, axis=0)
@@ -98,7 +95,7 @@ class PatentRetrievalService:
             [(idx, avg_similarities[idx]) for idx in relevant_indices], 
             key=lambda x: x[1], 
             reverse=True
-        )[:top_k]
+        )#[:top_k]
         
         # Prepare results with explanations
         results = {
@@ -111,7 +108,6 @@ class PatentRetrievalService:
             ],
             "metadata": {
                 "keywords": keywords,
-                "keyword_languages": keyword_languages,
                 "total_matches": len(ranked_results),
                 "embedding_model": self.model_name
             }
