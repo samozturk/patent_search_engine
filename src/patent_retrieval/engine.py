@@ -53,22 +53,7 @@ class PatentRetrievalService:
         self.index = faiss.IndexFlatIP(dimension)
         self.index.add(self.embeddings)
 
-    def retrieve_patents(
-        self,
-        keywords: List[str],
-        precision_recall_balance: float = 0.5
-    ):
-        """
-        Retrieve patent abstracts related to given keywords with precision-recall tradeoff
-        
-        Args:
-            keywords: Input keywords
-            precision_recall_balance: Value between 0 and 1
-                - Higher values (>0.5) favor recall: returns more results with varied relevance
-                - Lower values (<0.5) favor precision: returns fewer but more relevant results
-        Returns:
-            Dict containing retrieved patents and relevance scores
-        """
+    def retrieve_patents(self, keywords: List[str], precision_recall_balance: float = 0.5):
         # Validate precision-recall balance
         if not 0 <= precision_recall_balance <= 1:
             raise ValueError("precision_recall_balance must be between 0 and 1")
@@ -78,38 +63,28 @@ class PatentRetrievalService:
         faiss.normalize_L2(keyword_embedding)
         
         # Get raw similarity scores
-        distances, indices = self.index.search(
-            keyword_embedding,
-            k=len(self.abstracts)
-        )
-
-        # Apply precision-recall balance
-        threshold = np.percentile(
-            distances,
-            (1 - precision_recall_balance) * 100
-        )
-        # Get indices of abstracts with scores above threshold
-        relevant_indices = indices[distances >= threshold]
-
-        # Store them in a dictionary
-        results = {'abstract' : [],
-        'relevance_score': [],
-        'degree_between': []
-        }
-        for i, idx in enumerate(relevant_indices):
-            results['abstract'].append(self.abstracts[idx])
-            results['relevance_score'].append(float(distances[0][i]))
-            results['degree_between'].append(float(self.get_degree_between(keyword_embedding[0], self.embeddings[idx])))
-        # Prepare results with explanations
-        metadata = {
-                "keywords": keywords,
-                "total_matches": len(relevant_indices),
-                "precision_recall_balance": precision_recall_balance,
-                "embedding_model": self.model_name
-            }
-        metadata_df = pd.DataFrame(metadata)
+        distances, indices = self.index.search(keyword_embedding, k=len(self.abstracts))
         
-        return results, metadata_df
+        # Convert numpy arrays to native Python types
+        distances = distances[0].tolist()
+        indices = indices[0].tolist()
+        
+        # Apply precision-recall balance
+        threshold = float(np.percentile(distances, (1 - precision_recall_balance) * 100))
+        
+        # Create results dictionary with native Python types
+        results = {'abstract': [], 'relevance_score': [], 'degree_between': []}
+        
+        for i, (dist, idx) in enumerate(zip(distances, indices)):
+            if dist >= threshold:
+                results['abstract'].append(self.abstracts[idx])
+                results['relevance_score'].append(float(dist))
+                results['degree_between'].append(float(self.get_degree_between(
+                    keyword_embedding[0].tolist(), 
+                    self.embeddings[idx].tolist()
+                )))
+                
+        return results, {"keywords": keywords}
 
     def get_degree_between(self, a: np.array, b: np.array) -> float:
         cosine = np.dot(a,b) / (norm(a) * norm(b))
