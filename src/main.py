@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional
 from patent_retrieval.engine import PatentRetrievalService, load_config
+import uvicorn
 
 app = FastAPI(title="Patent Retrieval API")
 
@@ -34,5 +35,7 @@ def search_patents(request: SearchRequest):
 def health_check():
     return {"status": "healthy"}
 
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
 # uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
