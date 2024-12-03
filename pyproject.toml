@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "faiss-cpu>=1.9.0.post1",
+    "fastapi[standard]>=0.115.5",
     "ipykernel>=6.29.5",
     "langdetect>=1.0.9",
     "matplotlib>=3.9.3",
