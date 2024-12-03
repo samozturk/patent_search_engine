@@ -1,31 +1,38 @@
-from src.engine import PatentRetrievalService, load_config
-import json
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from typing import List, Optional
+from patent_retrieval.engine import PatentRetrievalService, load_config
 
-def main():
-    # Load configuration
-    config = load_config('config.json')
-    
-    # Initialize service
-    service = PatentRetrievalService(
-        dataset_path=config['dataset_path'],
-        model_name=config.get('embedding_model', 'paraphrase-multilingual-MiniLM-L12-v2')
-    )
-    
-    # Example usage
-    keywords = ["artificial intelligence", "machine learning"]
-    results = service.retrieve_patents(
-        keywords, 
-        precision_recall_balance=0.7
-    )
-    
-    print(json.dumps(results, indent=2))
+app = FastAPI(title="Patent Retrieval API")
 
-    # Demonstrate dataset update
-    new_abstracts = [
-        "A novel method for improving machine learning algorithms",
-        "Artificial intelligence in medical diagnostics"
-    ]
-    service.update_dataset(new_abstracts)
+# Load configuration and initialize service at startup
+config = load_config('patent_retrieval/config.json')
+service = PatentRetrievalService(
+    dataset_path=config['dataset_path'],
+    model_name=config['embedding_model']
+)
 
-if __name__ == "__main__":
-    main()
+class SearchRequest(BaseModel):
+    keywords: List[str]
+    precision_recall_balance: Optional[float] = 0.5
+
+@app.post("/search")
+def search_patents(request: SearchRequest):
+    try:
+        results, metadata = service.retrieve_patents(
+            keywords=request.keywords,
+            precision_recall_balance=request.precision_recall_balance
+        )
+        return {
+            "results": results,
+            "metadata": metadata
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/health")
+def health_check():
+    return {"status": "healthy"}
+
+# uvicorn main:app --reload --host 0.0.0.0 --port 8000
+

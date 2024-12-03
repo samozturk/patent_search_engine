@@ -64,10 +64,8 @@ class PatentRetrievalService:
         Args:
             keywords: Input keywords
             precision_recall_balance: Value between 0 and 1
-                - Higher values (>0.5) favor precision: returns fewer but more relevant results
-                - Lower values (<0.5) favor recall: returns more results with varied relevance
-            min_score_threshold: Minimum relevance score to include in results
-        
+                - Higher values (>0.5) favor recall: returns more results with varied relevance
+                - Lower values (<0.5) favor precision: returns fewer but more relevant results
         Returns:
             Dict containing retrieved patents and relevance scores
         """
