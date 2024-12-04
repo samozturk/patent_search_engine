@@ -36,11 +36,6 @@ def health_check():
     return {"status": "healthy"}
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000,
-                log_level="critical",  # set log level to critical
-                # Disable access logging. block console output
-                access_log=False,
-                log_config=None,
-)
+    uvicorn.run(app, host="0.0.0.0", port=8000)
 # uvicorn main:app --reload --host 0.0.0.0 --port 8000
 

@@ -56,3 +56,10 @@ response = requests.post(
 )
 results = response.json()
 ```
+
+# Further improvements
+- Add unit tests and integration tests
+- Add T-SNE visualization for search results and keywords
+- Add logging and monitoring
+- Implement caching for faster responses
+- Implement user authentication and authorization
