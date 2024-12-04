@@ -58,7 +58,9 @@ results = response.json()
 ```
 
 # Further improvements
-- Add unit tests and integration tests
+- Add more unit tests and integration tests
+- Implement precommit hook for auto linting and formatting
+- Implement coverage.py for code coverage
 - Add T-SNE visualization for search results and keywords
 - Add logging and monitoring
 - Implement caching for faster responses
