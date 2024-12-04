@@ -54,6 +54,30 @@ class PatentRetrievalService:
         self.index.add(self.embeddings)
 
     def retrieve_patents(self, keywords: List[str], precision_recall_balance: float = 0.5):
+        """
+    Retrieve relevant patents based on keyword search using semantic similarity.
+
+    Args:
+        keywords (List[str]): List of search keywords to find relevant patents
+        precision_recall_balance (float, optional): Controls the trade-off between precision and recall.
+            Values closer to 1.0 favor recall (more results), while values closer to 0.0 favor precision
+            (fewer but more relevant results). Defaults to 0.5.
+
+    Returns:
+        Tuple[Dict, Dict]: A tuple containing:
+            - results (Dict): Dictionary with three lists:
+                - abstract: List of retrieved patent abstracts
+                - relevance_score: Corresponding similarity scores
+                - degree_between: Angular distance between query and result embeddings
+            - metadata (Dict): Search metadata containing the input keywords
+
+    Raises:
+        ValueError: If precision_recall_balance is not between 0 and 1
+
+    Example:
+        >>> service = PatentRetrievalService("patents.txt")
+        >>> results, metadata = service.retrieve_patents(["autonomous", "vehicle"])
+    """
         # Validate precision-recall balance
         if not 0 <= precision_recall_balance <= 1:
             raise ValueError("precision_recall_balance must be between 0 and 1")
