@@ -129,7 +129,7 @@ class PatentRetrievalService:
         else:
             self._create_faiss_index()
 
-def load_config(config_path: str) -> Dict[str, Any]:
-    """Load configuration from JSON file"""
-    with open(config_path, 'r') as f:
-        return json.load(f)
+# def load_config(config_path: str) -> Dict[str, Any]:
+#     """Load configuration from JSON file"""
+#     with open(config_path, 'r') as f:
+#         return json.load(f)
