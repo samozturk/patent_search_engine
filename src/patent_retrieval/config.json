@@ -1,4 +1,0 @@
-{
-    "dataset_path": "./patent_retrieval/data.txt",
-    "embedding_model": "paraphrase-multilingual-MiniLM-L12-v2"
-}

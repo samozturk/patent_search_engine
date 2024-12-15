@@ -1,17 +1,16 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional
-from patent_retrieval.engine import PatentRetrievalService, load_config
+from patent_retrieval.engine import PatentRetrievalService
 import uvicorn
 
 app = FastAPI(title="Patent Retrieval API")
 
-# Load configuration and initialize service at startup
-config = load_config('patent_retrieval/config.json')
+
 service = PatentRetrievalService(
-    dataset_path=config['dataset_path'],
-    model_name=config['embedding_model']
-)
+        dataset_path="./patent_retrieval/data.txt",
+        model_name="paraphrase-multilingual-MiniLM-L12-v2"
+    )
 
 class SearchRequest(BaseModel):
     keywords: List[str]
