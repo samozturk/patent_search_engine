@@ -8,7 +8,7 @@ app = FastAPI(title="Patent Retrieval API")
 
 
 service = PatentRetrievalService(
-        dataset_path="./patent_retrieval/data.txt",
+        dataset_path="/app/src/patent_retrieval/data.txt",
         model_name="paraphrase-multilingual-MiniLM-L12-v2"
     )
 
