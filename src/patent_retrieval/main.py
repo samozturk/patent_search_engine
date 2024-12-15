@@ -3,12 +3,12 @@ import json
 
 def main():
     # Load configuration
-    config = load_config('/app/src/patent_retrieval/config.json')
+    # config = load_config('/app/src/patent_retrieval/config.json')
     
     # Initialize service
     service = PatentRetrievalService(
-        dataset_path=config['dataset_path'],
-        model_name=config['embedding_model']
+        dataset_path="./patent_retrieval/data.txt",
+        model_name="paraphrase-multilingual-MiniLM-L12-v2"
     )
     
     # Example usage
