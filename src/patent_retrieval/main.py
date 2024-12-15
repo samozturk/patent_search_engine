@@ -3,7 +3,7 @@ import json
 
 def main():
     # Load configuration
-    config = load_config('config.json')
+    config = load_config('/app/src/patent_retrieval/config.json')
     
     # Initialize service
     service = PatentRetrievalService(
